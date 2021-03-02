@@ -9,6 +9,6 @@ router.get('/blogs',list)
 router.post('/blogs-categories-tags',listAllBlogsCategoriesTags)
 router.get('/blogs/:slug',read)
 router.delete('/blogs/:slug',requireSignin,adminMiddleware,remove)
-//!router.put('/blogs/:slug',requireSignin,adminMiddleware,update)
+router.put('/blogs/:slug',requireSignin,adminMiddleware,update)
 
 module.exports=router;

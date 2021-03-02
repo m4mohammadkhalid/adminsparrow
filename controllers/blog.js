@@ -128,38 +128,40 @@ exports.list = (request, response) => {
 };
 
 exports.listAllBlogsCategoriesTags = (request, response) => {
-  let limit = request.body.limit ? parseInt(request.body.limit) : 10
-  let skip = request.body.skip ? parseInt(request.body.skip) : 0
+  let limit = request.body.limit ? parseInt(request.body.limit) : 10;
+  let skip = request.body.skip ? parseInt(request.body.skip) : 0;
 
-  let blogs
-  let categories
-  let tags
+  let blogs;
+  let categories;
+  let tags;
   Blog.find({})
-    .populate("categories",'_id name slug')
+    .populate("categories", "_id name slug")
     .populate("tags", "_id name slug")
     .populate("postedBy", "_id name username profile")
-    .sort({createdAt: -1})
+    .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
-    .select("_id title slug excerpt categories tags postedBy createdAt updatedAt")
+    .select(
+      "_id title slug excerpt categories tags postedBy createdAt updatedAt"
+    )
     .exec((err, data) => {
       if (err) {
         return response.json({
           error: errorHandler(err),
         });
       }
-    blogs= data     
+      blogs = data;
       Category.find({}).exec((err, c) => {
         if (err) {
           return response.json({
-            error: errorHandler(err)
+            error: errorHandler(err),
           });
         }
         categories = c;
         Tag.find({}).exec((err, t) => {
           if (err) {
             return response.json({
-              error: errorHandler(err)
+              error: errorHandler(err),
             });
           }
           tags = t;
@@ -169,38 +171,96 @@ exports.listAllBlogsCategoriesTags = (request, response) => {
     });
 };
 
-
-exports.read=(request, response)=>{
+exports.read = (request, response) => {
   const slug = request.params.slug.toLowerCase();
-  Blog.findOne({slug})
-  .populate("categories",'_id name slug')
-  .populate("tags", "_id name slug")
-  .populate("postedBy", "_id name username")
-  .select("_id title body slug mtitle mdesc categories tags postedBy createdAt updatedAt")
-  .exec((err, data)=>{
+  Blog.findOne({ slug })
+    .populate("categories", "_id name slug")
+    .populate("tags", "_id name slug")
+    .populate("postedBy", "_id name username")
+    .select(
+      "_id title body slug mtitle mdesc categories tags postedBy createdAt updatedAt"
+    )
+    .exec((err, data) => {
+      if (err) {
+        return response.json({
+          error: errorHandler(err),
+        });
+      }
+      response.json(data);
+    });
+};
+
+exports.remove = (request, response) => {
+  const slug = request.params.slug.toLowerCase();
+  Blog.findOneAndRemove({ slug }).exec((err) => {
     if (err) {
       return response.json({
-        error: errorHandler(err)
+        error: errorHandler(err),
       });
     }
-    response.json(data)
-  })
+    response.json({
+      message: "Blog Delete Success",
+    });
+  });
+};
 
-}
-
-
-exports.remove=(request, response)=>{
+exports.update = (request, response) => {
   const slug = request.params.slug.toLowerCase();
-  Blog.findOneAndRemove({slug})
-  .exec((err)=>{
+  Blog.findOne({ slug }).exec((err, oldBlog) => {
     if (err) {
-      return response.json({
-        error: errorHandler(err)
+      return response.status(400).json({
+        error: errorHandler(err),
       });
     }
-    response.json({ 
-      message: 'Blog Delete Success'
-    })
-  })
+    let form = new formidable.IncomingForm();
+    form.keepExtensions = true;
+    form.parse(request, (err, fields, files) => {
+      if (err) {
+        return response.status(400).json({
+          error: "Image Could Not Uploads",
+        });
+      }
 
-}
+        let slugBeforeMerge =oldBlog.slug
+        oldBlog=_.merge(oldBlog, fields)
+        oldBlog.slug = slugBeforeMerge
+
+      const { body,desc, categories, tags } = fields;
+  
+      if (body) {
+        oldBlog.excerpt=smartTrim(body, 320,' ',' ...')
+        oldBlog.mdesc=stripHtml(body.substring(0,160))
+      }
+      if (categories) {
+        oldBlog.categories=categories.split(',')
+      }
+      if (tags) {
+        oldBlog.tags=tags.split(',')
+      }
+      
+  
+      
+  
+      //! 10000000 bites
+      if (files.photo) {
+        if (files.photo.size > 10000000) {
+          return response.status(400).json({
+            error: "Image Should be less then 1mb in sizes",
+          });
+        }
+        oldBlog.photo.data = fs.readFileSync(files.photo.path);
+        oldBlog.photo.contentType = files.photo.type;
+      }
+  
+      oldBlog.save((err, result) => {
+        if (err) {
+          return response.status(400).json({
+            error: errorHandler(err),
+          });
+        }
+          response.json(result);
+      });
+    });
+  });
+
+};
