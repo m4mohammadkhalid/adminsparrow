@@ -174,6 +174,7 @@ exports.listAllBlogsCategoriesTags = (request, response) => {
 exports.read = (request, response) => {
   const slug = request.params.slug.toLowerCase();
   Blog.findOne({ slug })
+  //!.select("-photo")
     .populate("categories", "_id name slug")
     .populate("tags", "_id name slug")
     .populate("postedBy", "_id name username")
@@ -258,9 +259,25 @@ exports.update = (request, response) => {
             error: errorHandler(err),
           });
         }
-          response.json(result);
+       // result.photo=undefined;
+        response.json(result);
       });
     });
   });
 
 };
+
+exports.photo=(request, response)=>{
+  const slug=request.params.slug.toLowerCase();
+  Blog.findOne({slug})
+  .select("photo")
+  .exec((err, blog)=>{
+        if(err || !blog ){
+            return response.status(400).json({
+              error: errorHandler(err),
+            });
+        }
+        response.set('Content-Type', blog.photo.contentType)
+        return response.send(blog.photo.data);
+  })
+}
