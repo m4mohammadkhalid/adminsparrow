@@ -168,3 +168,39 @@ exports.listAllBlogsCategoriesTags = (request, response) => {
       });
     });
 };
+
+
+exports.read=(request, response)=>{
+  const slug = request.params.slug.toLowerCase();
+  Blog.findOne({slug})
+  .populate("categories",'_id name slug')
+  .populate("tags", "_id name slug")
+  .populate("postedBy", "_id name username")
+  .select("_id title body slug mtitle mdesc categories tags postedBy createdAt updatedAt")
+  .exec((err, data)=>{
+    if (err) {
+      return response.json({
+        error: errorHandler(err)
+      });
+    }
+    response.json(data)
+  })
+
+}
+
+
+exports.remove=(request, response)=>{
+  const slug = request.params.slug.toLowerCase();
+  Blog.findOneAndRemove({slug})
+  .exec((err)=>{
+    if (err) {
+      return response.json({
+        error: errorHandler(err)
+      });
+    }
+    response.json({ 
+      message: 'Blog Delete Success'
+    })
+  })
+
+}

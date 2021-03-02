@@ -12,7 +12,7 @@ const category=require('./routes/category')
 const tag=require('./routes/tag')
 const blog=require('./routes/blog')
 
-const PORT=process.env.PORT || 9000; 
+const PORT=process.env.PORT || 8000; 
 const connection=require("./models/connection");
 const { request } = require("express");
 
