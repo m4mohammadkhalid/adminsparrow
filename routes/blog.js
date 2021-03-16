@@ -1,15 +1,7 @@
-const express=require('express');
-const router=express.Router();
-const {create, list, listAllBlogsCategoriesTags,read, remove, update,photo}=require('../controllers/blog')
+const express = require('express');
+const router = express.Router();
+const { time } = require('../controllers/blog');
 
-const {requireSignin,adminMiddleware}=require('../controllers/loginController');
+router.get('/', time);
 
-router.post('/blog',requireSignin,adminMiddleware,create)
-router.get('/blogs',list)
-router.post('/blogs-categories-tags',listAllBlogsCategoriesTags)
-router.get('/blog/:slug',read)
-router.delete('/blog/:slug',requireSignin,adminMiddleware,remove)
-router.put('/blog/:slug',requireSignin,adminMiddleware,update)
-router.get('/blog/photo/:slug',photo)
-
-module.exports=router;
+module.exports = router;
