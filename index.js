@@ -12,7 +12,12 @@ require('dotenv').config()
 // const tag=require('./routes/tag')
 const blog = require('./routes/blog')
 const authRoute=require('./routes/auth')
-const userRoute=require('./routes/user')
+const userRoute = require('./routes/user')
+const CategoryRoute = require('./routes/category')
+const tagRoute = require('./routes/tag')
+
+
+
 
 
 const PORT=process.env.PORT || 8000; 
@@ -36,9 +41,10 @@ index.set('views', __dirname + '/views');
 // index.use("/",register);
 // index.use(category);
 index.use(authRoute);
+index.use(CategoryRoute);
 index.use(userRoute);
-
 index.use(blog);
+index.use(tagRoute);
 
 index.listen(PORT,()=>{
     console.log("server start");
